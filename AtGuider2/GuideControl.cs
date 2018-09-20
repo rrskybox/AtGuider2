@@ -21,7 +21,7 @@ namespace AtGuider2
             //
 
             const double maxExposure = 10;
-            const double minExposure = 0.1;
+            const double minExposure = 0.01;
 
             //Only take at max 4 shots at getting a good exposure, otherwise return the max or min
             for (int i = 0; i < 4; i++)

@@ -37,7 +37,11 @@ namespace AtGuider2
         public DBQStar OffsetCenter(DBQStar tgtStar, double imagePA)
         {
             /*Calculates an offset position that places the input position in the center 
-               * of the guider FOV
+               * of the guider FOV.  
+               * 
+               * Note that the bearing for moving off the target star is opposite for different
+               * sides of the pier.  If the scope is peering over the meridian, then this wont work
+               * well.
                */
 
             //Set the star chart FOV 4 times the y distance (arcmin) center of the ccd
@@ -51,11 +55,13 @@ namespace AtGuider2
             double gRotationR = -Math.Atan2(gfov.CenterX, gfov.CenterY);
             // Increment the image PA by the guider offset
             double bearingR = gRotationR + Transform.DegreesToRadians(imagePA);
+            // Reverse bearing if the mount is pointing east
+            //if (!pierEast) { bearingR = -bearingR; }
             // Compute the distance beween the center of the Image FOV and the center of the Guider FOV
             double distanceR = Transform.DegreesToRadians((SumOfSquares(gfov.CenterX, gfov.CenterY)) / 60.0);
             // Calculate an offset position such that the guider FOV will have the target star in its center
             //Celestial.RADec endPosition = Celestial.Travel(tgtStarPosition, -gVectorR, gRotationR);
-            Celestial.RADec endPosition = Celestial.ComputePositionFromDistanceAndBearing(tgtStarPosition, -distanceR, bearingR);
+            Celestial.RADec endPosition = Celestial.ComputePositionFromBearingAndRange(tgtStarPosition, bearingR, -distanceR);
 
             // Convert this position back to hours and degrees (RA and Dec) and return the result
             //  as a DBQStar structure
