@@ -3,11 +3,11 @@ using TheSkyXLib;
 
 namespace AtGuider2
 {
-    class Program
+    public static class AtGuider2
     {
         const double searchAreaDeg = 10;
 
-        static void Main(string[] args)
+        public static void CalibrateGuider()
         {
 
             //AtGuider2 Application for automated guider camera calibration
@@ -23,72 +23,72 @@ namespace AtGuider2
             const double InitialGuiderExposure = 0.5; //Initial exposure level for guider camera images.
             const double OptGuiderADU = 20000; //Target ADU for guide star in guider camera images.
 
-            Console.WindowHeight = 20;
-            Console.WindowWidth = 60;
-            Console.Title = Version;
-            //Console.ForegroundColor = ConsoleColor.Red;
-     
+            //Open text output form
+            FormGuiderAutoCalibrate  ag2Form = new FormGuiderAutoCalibrate();
+            ag2Form.Show();
+
             //Lets get started...
             //plate solve current location to prime target star search and to acquire image camera position angle
-            Console.WriteLine("Plate Solving for current position and position angle");
+            
+            ag2Form.agcTextBox.AppendText("Plate Solving for current position and position angle" + "\r\n");
             double imagePA = PlateSolve();
-            Console.WriteLine("Position Angle: " + imagePA.ToString("0.000"));
+            ag2Form.agcTextBox.AppendText("Position Angle: " + imagePA.ToString("0.000") + "\r\n");
             //Create an FOV object for the guider from the "My equipment.txt" Field of View Indicators file
-            Console.WriteLine("Parsing My equipment.txt file for FOVI definitions");
+            ag2Form.agcTextBox.AppendText("Parsing My equipment.txt file for FOVI definitions"+"\r\n");
             FOVMiracles guiderFOV = new FOVMiracles();
-            Console.WriteLine("Active Guider found: " + guiderFOV.FOVName);
+            ag2Form.agcTextBox.AppendText("Active Guider found: " + guiderFOV.FOVName + "\r\n");
             //Set the chart size for something pleasant around the FOVI's
             guiderFOV.SetStarChartSize();
             //Find a calibration star near the current position
             //  that is sufficiently isolated from other similar stars
-            Console.WriteLine("Looking for proximate star to use for calibration");
+            ag2Form.agcTextBox.AppendText("Looking for proximate star to use for calibration"+"\r\n");
             DBQStar foundStar = FindStar(guiderFOV.FOVIsolation);
             if (foundStar == null)
             {
-                Console.WriteLine("No calibration star found.  Try another location.");
+                ag2Form.agcTextBox.AppendText("No calibration star found.  Try another location."+"\r\n");
             }
             else
             {
-                Console.WriteLine("Calibration star found: " + foundStar.StarName);
+                ag2Form.agcTextBox.AppendText("Calibration star found: " + foundStar.StarName + "\r\n");
                 //Closed Loop Slew (following standard slew -- see notes) to the target guide star
-                Console.WriteLine("Centering imaging camera on calibration star");
+                ag2Form.agcTextBox.AppendText("Centering imaging camera on calibration star"+"\r\n");
                 bool slewDone1 = SlewToStar(foundStar.StarName, foundStar.StarRA, foundStar.StarDec);
-                if (slewDone1) Console.WriteLine("Calibration star centered");
-                else Console.WriteLine("There was a problem centering the calibration star");
+                if (slewDone1) ag2Form.agcTextBox.AppendText("Calibration star centered"+"\r\n");
+                else ag2Form.agcTextBox.AppendText("There was a problem centering the calibration star"+"\r\n");
                 //Calculate a pointing position that would put the target star in the guider FOV
-                Console.WriteLine("Calculating offset for centering star in guider FOV");
+                ag2Form.agcTextBox.AppendText("Calculating offset for centering star in guider FOV"+"\r\n");
                 DBQStar tgtPosition = guiderFOV.OffsetCenter(foundStar, imagePA);
-                Console.WriteLine("Offset calculated for pointing at " + tgtPosition.StarRA.ToString("0.000") + " , " + tgtPosition.StarDec.ToString("0.000"));
+                ag2Form.agcTextBox.AppendText("Offset calculated for pointing at " + 
+                    tgtPosition.StarRA.ToString("0.000") + " , " + 
+                    tgtPosition.StarDec.ToString("0.000")+"\r\n");
 
                 //Closed Loop Slew (following standard slew -- see notes) to that offset position
-                Console.WriteLine("Centering calibration star in guider FOV");
+                ag2Form.agcTextBox.AppendText("Centering calibration star in guider FOV"+"\r\n");
                 bool slewDone = SlewToPosition(tgtPosition.StarRA, tgtPosition.StarDec);
-                if (slewDone1) Console.WriteLine("Calibration star centered in guider FOV");
-                else Console.WriteLine("Could not recenter the calibration star");
+                if (slewDone1) ag2Form.agcTextBox.AppendText("Calibration star centered in guider FOV"+"\r\n");
+                else ag2Form.agcTextBox.AppendText("Could not recenter the calibration star"+"\r\n");
                 //plate solve current location -- not necessary but it sets up the star chart nicely for viewing
                 //  note that we are not in such a hurry that we can't mess around a bit
-                Console.WriteLine("Checking offset position with a plate solve");
+                ag2Form.agcTextBox.AppendText("Checking offset position with a plate solve"+"\r\n");
                 imagePA = PlateSolve();
                 //Reset the chart size for something pleasant around the FOVI's
                 guiderFOV.SetStarChartSize();
                 //center the star chart on the pointing location ==  once again, for esthetic purposes
-                Console.WriteLine("Recentering chart");
+                ag2Form.agcTextBox.AppendText("Recentering chart"+"\r\n");
                 sky6StarChart tsxsc = new sky6StarChart
                 {
                     RightAscension = tgtPosition.StarRA,
                     Declination = tgtPosition.StarDec
                 };
                 //Take a guider image and adjust the exposure to an optimal level
-                Console.WriteLine("Adjusting guider exposure to achieve ADU of " + OptGuiderADU.ToString());
+                ag2Form.agcTextBox.AppendText("Adjusting guider exposure to achieve ADU of " + OptGuiderADU.ToString() + "\r\n");
                 double optExposure = OptimizeExposure(InitialGuiderExposure, OptGuiderADU);
-                Console.WriteLine("Best guider exposure determined to be " + optExposure.ToString("0.00") + " secs");
+                ag2Form.agcTextBox.AppendText("Best guider exposure determined to be " + optExposure.ToString("0.00") + " secs"+"\r\n");
                 //Calibrate the guider
-                Console.WriteLine("Starting guider calibration");
+                ag2Form.agcTextBox.AppendText("Starting guider calibration"+"\r\n");
                 string calDone = CalibrateGuideCam(optExposure, false); //No AO
-                Console.Write(calDone);
+                ag2Form.agcTextBox.AppendText(calDone + "\r\n");
             }
-            Console.WriteLine(" - Hit enter to close");
-            Console.ReadLine();
             //all done
             return;
         }
@@ -105,16 +105,10 @@ namespace AtGuider2
                 ExposureTime = 10,
                 Delay = 0,
                 Asynchronous = 0,
-                AutoSaveOn = 1,
-                Subframe = 0
+                AutoSaveOn = 1
             };
 
-            try { tsxcc.TakeImage(); }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex);
-                return 0;
-            }
+            tsxcc.TakeImage();
 
             ccdsoftImage tsxi = new ccdsoftImage();
             ImageLink tsxil = new ImageLink
@@ -122,11 +116,7 @@ namespace AtGuider2
                 pathToFITS = tsxcc.LastImageFileName,
                 scale = 1.70
             };
-            try { tsxil.execute(); }
-            catch (Exception ex)
-            {
-                return 0;
-            }
+            tsxil.execute();
             ImageLinkResults tsxir = new ImageLinkResults();
             double iPA = tsxir.imagePositionAngle;
              
@@ -230,7 +220,7 @@ namespace AtGuider2
             {
                 Asynchronous = 0
             };
-
+            if (tsxm.IsConnected == 0) { tsxm.Connect(); }
             tsxm.SlewToRaDec(starRA, starDec, "Target Position");
 
             sky6StarChart tsxsc = new sky6StarChart();
