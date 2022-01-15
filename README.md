@@ -61,7 +61,7 @@ AtGuider2 is an uncertified Windows console application, written in C#.  The app
 
 Installation:  
 
-Download the "publish" directory. Run the "Setup.exe".  Upon completion, an application icon will have been added to the start menu under "TSXToolKit" with the name "AtGuider2".  This application can be pinned to the Start if desired.
+From the "AtGuider2/publish" directory, download "AtGuider2.zip".  Extract the files and run "setup.exe".  Upon completion, an application icon will have been added to the start menu under "TSXToolKit" with the name "AtGuider2".  This application can be pinned to the Start if desired.
 
 Source:
 
